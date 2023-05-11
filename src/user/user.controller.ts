@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Patch, Delete, NotFoundException, UseInterceptors,UploadedFile, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Patch, Delete, NotFoundException, UseInterceptors,UploadedFile, BadRequestException ,UsePipes, ValidationPipe, HttpCode, ParseIntPipe} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Meeting, Product, User } from 'src/user/typeorm';
@@ -154,6 +154,8 @@ export class UserController {
 /*Meeting entity added and created a meeting*/
 /*Upload a file to meeting with same api*/
     @Post('/createMeeting')
+    // @HttpCode(200)
+    @UsePipes(ValidationPipe)
     @UseInterceptors(FileInterceptor('file', {
             storage: diskStorage({
                 destination: './uploads/uploadFile',
@@ -172,13 +174,12 @@ export class UserController {
         if(file){
             meeting.uploadfile = filenametostore;
         }
-        console.log(file);
         return await this.userService.createMeeting(meeting);
     }
 
 /*Get the meeting by theire id */
     @Get('/getMeet/:id')
-    async getMeetById(@Param('id')id:number):Promise<Meeting>{
+    async getMeetById(@Param('id' , ParseIntPipe)id:number):Promise<Meeting>{
         const meet= await this.userService.findMeetById(id);
         return meet;
     }

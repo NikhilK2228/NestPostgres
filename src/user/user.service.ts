@@ -127,7 +127,6 @@ export class UserService {
         return await this.productRepository.find();
     }
 
-
 /*Meeting entity added and created a meeting*/
     async createMeeting(meeting:Meeting):Promise<Meeting> {
         const meet= new Meeting();

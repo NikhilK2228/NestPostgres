@@ -1,7 +1,7 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { IsNotEmpty } from 'class-validator';
 import { Transform } from "class-transformer";
-import moment from "moment-timezone";
+import * as moment from 'moment';
 
 @Entity()
 export class Meeting extends BaseEntity{
