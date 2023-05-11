@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Param, Post, Put, Patch, Delete, NotFoundException, UseInterceptors,UploadedFile } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Patch, Delete, NotFoundException, UseInterceptors,UploadedFile, BadRequestException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Meeting, Product, User } from 'src/user/typeorm';
 import { diskStorage } from 'multer';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
 import { extname } from 'path';
 import { CreateProductDto } from './dto/product.dto';
@@ -152,40 +152,35 @@ export class UserController {
     }
 
 /*Meeting entity added and created a meeting*/
+/*Upload a file to meeting with same api*/
     @Post('/createMeeting')
-    async createMeet(@Body() createmeetdto:CreateMeetingDto[]):Promise<Meeting[]>{
-        return await this.userService.createMeet(createmeetdto);
+    @UseInterceptors(FileInterceptor('file', {
+            storage: diskStorage({
+                destination: './uploads/uploadFile',
+                filename:(req, file, callback)=>{
+                    const randomName = uuidv4();
+                    const fileExt = extname(file.originalname);
+                    callback(null, `${randomName}${fileExt}`);
+                }
+            })
+        }))
+        
+    async createMeeting(@Body() meeting:Meeting, @UploadedFile() file):Promise<Meeting> {
+        const randomName= uuidv4();
+        const fileExt = extname(file.originalname);
+        const filenametostore= `${randomName}${fileExt}`;
+        if(file){
+            meeting.uploadfile = filenametostore;
+        }
+        console.log(file);
+        return await this.userService.createMeeting(meeting);
     }
+
+/*Get the meeting by theire id */
     @Get('/getMeet/:id')
     async getMeetById(@Param('id')id:number):Promise<Meeting>{
         const meet= await this.userService.findMeetById(id);
-        console.log(meet);
         return meet;
-    }
-/*Upload a file to meeting by theire id */
-    @Post('uploadMeetFile/:id')
-    @UseInterceptors(FileInterceptor('file', {
-        storage: diskStorage({
-            destination: './uploads/uploadFile',
-            filename:(req, file, cb)=>{
-                const randomName = uuidv4();
-                const fileExtension = extname(file.originalname);
-                cb(null, `${randomName}${fileExtension}`);
-            }
-        })
-    }))
-    async uploadMeetFile(@Param('id') id:number, @UploadedFile() file) {
-        const meeting= await this.userService.findMeetById(id);
-        if(!meeting){
-            throw new NotFoundException('Meeting not present to upload a file')
-        }
-        const randomName = uuidv4();
-        const fileExtension = extname(file.originalname);
-        const filenametostore= `${randomName}${fileExtension}`;
-        console.log(`File uploaded to meeting id : ${id} as file ${filenametostore}`)
-        meeting.uploadfile= filenametostore;
-        const picUpload = await this.userService.uploadMeetFile(meeting);
-        return `file uploaded to meeting id:  ${id}`;
     }
 
 }

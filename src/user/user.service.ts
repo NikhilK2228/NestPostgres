@@ -8,6 +8,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Product } from './typeorm/product.entity';
 import { CreateProductDto } from './dto/product.dto';
 import { CreateMeetingDto } from './dto/meeting.dto';
+import { v4 as uuidv4 } from 'uuid';
+import { extname } from 'path';
+import { title } from 'process';
 
 @Injectable()
 export class UserService {
@@ -126,19 +129,25 @@ export class UserService {
 
 
 /*Meeting entity added and created a meeting*/
-    async createMeet(createmeetdto:CreateMeetingDto[]):Promise<Meeting[]>{
-        const createMeet = this.meetingRepository.create(createmeetdto);
-        return await this.meetingRepository.save(createMeet)
+    async createMeeting(meeting:Meeting):Promise<Meeting> {
+        const meet= new Meeting();
+        // created a instance of meeting entity //
+        meet.title = meeting.title;
+        meet.meetingType = meeting.meetingType;
+        meet.meetingDate = meeting.meetingDate;
+        meet.meetingStartTime = meeting.meetingStartTime;
+        meet.meetingEndTime = meeting.meetingEndTime;
+        meet.meetingStartReminder = meeting.meetingStartReminder;
+        meet.initiator = meeting.initiator;
+        meet.invitees = meeting.invitees;
+        meet.uploadfile = meeting.uploadfile;
+
+        return await this.meetingRepository.save(meeting);
     }
 
-/*Upload a file to meeting by theire id */
+/*Get the meeting by theire id */
     async findMeetById(id: number): Promise<Meeting> {
         const meet= await this.meetingRepository.findOne({ where: { id } });
         return meet;
     }
-    async uploadMeetFile(meeting:Meeting):Promise<Meeting>{
-        return await this.meetingRepository.save(meeting);
-    }
-    
-
 }
